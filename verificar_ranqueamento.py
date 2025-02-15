@@ -39,7 +39,8 @@ def verificar_ranqueamento(prompt, site_alvo, num_resultados=50):
     url = f"https://www.google.com/search?q={query}&num={num_resultados}"
     
     driver.get(url)
-    time.sleep(random.uniform(2, 5))  # Esperar um tempo aleatório para carregar a página
+    # Tempo aleatório pro Recaptcha não pegar (é bom aumentar um pouco a entropia pra dps evitar de cair no recaptcha)
+    time.sleep(random.uniform(2, 5))  
 
     resultados = driver.find_elements(By.CSS_SELECTOR, 'div.yuRUbf')
     
@@ -63,16 +64,12 @@ def verificar_ranqueamento(prompt, site_alvo, num_resultados=50):
     return None
     
 
-# Leia o arquivo CSV de entrada
 df = pd.read_csv('prompts.csv')
 
-# Site alvo
 site_alvo = "www.mrferreiralocacoes.com.br"
 
-# Lista para armazenar os resultados
 resultados = []
 
-# Iterar sobre os prompts e verificar o ranqueamento
 for index, row in df.iterrows():
     prompt = row['Palavras-chave']  
     posicao = verificar_ranqueamento(prompt, site_alvo)
@@ -81,27 +78,9 @@ for index, row in df.iterrows():
     else: 
         print(f"O site {site_alvo} não foi encontrado nos primeiros resultados para a busca '{prompt}'")
         
-    # Armazenar o resultado no dicionário
     resultados.append({'Nome da Pesquisa': prompt, 'Rankeamento': posicao if posicao is not None else 'Não encontrado'})
     
-    # Salvar os resultados periodicamente a cada 10 iterações
     if (index + 1) % 10 == 0:
         resultados_df = pd.DataFrame(resultados)
         resultados_df.to_csv('resultados_parciais.csv', index=False)
-        print(f"Resultados parciais salvos no arquivo 'resultados_parciais.csv' até a linha {index + 1}.")
     
-    # Adicionar atraso aleatório entre as solicitações
-    time.sleep(random.uniform(1, 30))
-
-# Criar DataFrame a partir dos resultados finais
-resultados_df = pd.DataFrame(resultados)
-
-# Salvar os resultados finais em um arquivo CSV
-resultados_df.to_csv('resultados.csv', index=False)
-print("Os resultados finais foram salvos no arquivo 'resultados.csv'.")
-
-# Exibir os resultados finais (opcional)
-print("\nResultados finais:")
-print(resultados_df)
-
-abrir_pagina_anonima('file://' + pd.io.common.pathlib.Path('resultados.csv').absolute().as_uri())
